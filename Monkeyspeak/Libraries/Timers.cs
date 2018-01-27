@@ -2,6 +2,7 @@
 using Monkeyspeak.Logging;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -106,7 +107,7 @@ namespace Monkeyspeak.Libraries
 
         public override int BaseId => 300;
 
-        public static TimeZoneInfo TimeZone
+        public TimeZoneInfo TimeZone
         {
             get => timeZone;
             set
@@ -195,6 +196,32 @@ namespace Monkeyspeak.Libraries
 
             Add(TriggerCategory.Effect, GetAllTimeZones,
                 "get the available time zones and put it into table %");
+
+            Add(TriggerCategory.Effect, GetUserTimeZone,
+                "get the user's time zone and put it into variable %");
+
+            Add(TriggerCategory.Effect, ConvertTimeToTimeZone,
+                "convert time {...} to time zone {...} and put it into variable %");
+        }
+
+        [TriggerDescription("Converts the given time to the time zone, must be month-day-year hour:minute:second format.")]
+        private bool ConvertTimeToTimeZone(TriggerReader reader)
+        {
+            var time = reader.ReadString();
+            if (!DateTime.TryParseExact(time, "MM-dd-yyyy hh:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.AllowWhiteSpaces, out var dateTime))
+            {
+                RaiseError($"Invalid time format {time}");
+            }
+            try
+            {
+                var tz = TimeZoneInfo.FindSystemTimeZoneById(reader.ReadString());
+                dateTime = TimeZoneInfo.ConvertTime(dateTime, tz);
+                var var = reader.ReadVariable(true);
+                var.Value = dateTime.ToString("MM-dd-yyyy hh:mm:ss");
+                return true;
+            }
+            catch { }
+            return false;
         }
 
         [TriggerDescription("Gets the universal time zone and puts it into a variable")]
@@ -225,7 +252,16 @@ namespace Monkeyspeak.Libraries
             return true;
         }
 
-        private static TimeZoneInfo timeZone = TimeZoneInfo.Local;
+        [TriggerDescription("Gets the user's time zone and puts it into a variable.")]
+        [TriggerStringParameter]
+        private bool GetUserTimeZone(TriggerReader reader)
+        {
+            var var = reader.ReadVariable(true);
+            var.Value = TimeZoneInfo.Local.Id;
+            return true;
+        }
+
+        private TimeZoneInfo timeZone = TimeZoneInfo.Local;
 
         [TriggerDescription("Sets the time zone.  Any triggers before this will use the time zone set by the application.")]
         [TriggerStringParameter]
