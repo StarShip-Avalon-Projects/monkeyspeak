@@ -1,40 +1,28 @@
-﻿using ICSharpCode.AvalonEdit.CodeCompletion;
-using ICSharpCode.AvalonEdit.Document;
+﻿using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Rendering;
 using MahApps.Metro.Controls;
 using MahApps.Metro.Controls.Dialogs;
 using Microsoft.Win32;
 using Monkeyspeak.Editor.HelperClasses;
-using Monkeyspeak.Editor.Interfaces.Plugins;
-using Monkeyspeak.Editor.Plugins;
 using Monkeyspeak.Logging;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using System.Xml;
-using Monkeyspeak.Extensions;
 using ICSharpCode.AvalonEdit.Search;
 using Monkeyspeak.Editor.Syntax;
 using Monkeyspeak.Editor.Utils;
-using MahApps.Metro;
-using Monkeyspeak.Editor.Extensions;
 using Monkeyspeak.Editor.Commands;
+using Monkeyspeak.Editor.Collaborate;
 
 namespace Monkeyspeak.Editor.Controls
 {
@@ -77,7 +65,9 @@ namespace Monkeyspeak.Editor.Controls
 
         public event Action<string, int> LineAdded, LineRemoved;
 
-        public event Action<EditorControl> Closing;
+        public event Action<IEditor> Closing;
+
+        public event Action<IEditor, string, int> Typing;
 
         public EditorControl()
         {
@@ -124,6 +114,8 @@ namespace Monkeyspeak.Editor.Controls
                 {
                     SyntaxChecker.Check(this, CaretLine);
                     Intellisense.GenerateTriggerListCompletion(this);
+
+                    Typing?.Invoke(this, e.Text, CaretLine);
                 }
             };
             textEditor.TextArea.TextEntering += (sender, e) =>
@@ -134,6 +126,7 @@ namespace Monkeyspeak.Editor.Controls
                     {
                         Intellisense.TextEntered(e);
                     }
+                    SyntaxChecker.Check(this, CaretLine);
                 }
             };
 
@@ -244,6 +237,8 @@ namespace Monkeyspeak.Editor.Controls
 
         public string Title { get => _title; set => SetField(ref _title, value); }
 
+        public string Text => textEditor.Text;
+
         public string HighlighterLanguage
         {
             get => textEditor.SyntaxHighlighting.Name;
@@ -266,9 +261,24 @@ namespace Monkeyspeak.Editor.Controls
 
         public bool HasChanges { get => _hasChanges; set => SetField(ref _hasChanges, value); }
 
+        public bool HasFile => currentFilePath != Title;
+
         public void InsertAtCaretLine(string text)
         {
             var curLine = textEditor.Document.GetLineByOffset(textEditor.CaretOffset);
+            if (curLine.NextLine != null)
+                curLine = curLine.NextLine;
+            text = TextUtilities.NormalizeNewLines(text, "\n").Replace("\n", string.Empty);
+            BeginUndoGroup();
+            textEditor.Document.Insert(curLine.Offset, text + "\n", AnchorMovementType.AfterInsertion);
+            EndUndoGroup();
+            textEditor.CaretOffset = curLine.Offset;
+        }
+
+        public void InsertAtLine(string text, int line)
+        {
+            if (line < 0) return;
+            var curLine = textEditor.Document.GetLineByNumber(line);
             if (curLine.NextLine != null)
                 curLine = curLine.NextLine;
             text = TextUtilities.NormalizeNewLines(text, "\n").Replace("\n", string.Empty);
@@ -405,7 +415,7 @@ namespace Monkeyspeak.Editor.Controls
 
         public string CurrentFilePath
         {
-            get => currentFilePath;
+            get => currentFilePath ?? Title;
             set
             {
                 currentFilePath = value;
@@ -675,7 +685,7 @@ namespace Monkeyspeak.Editor.Controls
             Application.Current.Exit += Application_Exit;
         }
 
-        private void Parent_Unloaded(EditorControl editor)
+        private void Parent_Unloaded(IEditor editor)
         {
             skipProcessing = true;
         }

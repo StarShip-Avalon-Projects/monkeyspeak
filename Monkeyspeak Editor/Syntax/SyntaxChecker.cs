@@ -17,7 +17,7 @@ using Monkeyspeak.Logging;
 
 namespace Monkeyspeak.Editor.Syntax
 {
-    public class SyntaxError
+    public struct SyntaxError
     {
         public EditorControl Editor { get; set; }
         public Exception Exception { get; set; }
@@ -28,11 +28,14 @@ namespace Monkeyspeak.Editor.Syntax
     public class SyntaxChecker
     {
         private static Dictionary<EditorControl, ITextMarkerService> textMarkers = new Dictionary<EditorControl, ITextMarkerService>();
+        private static Dictionary<EditorControl, List<SyntaxError>> errors = new Dictionary<EditorControl, List<SyntaxError>>();
         private static Page page;
 
         public static event Action<EditorControl> Cleared;
 
-        public static event Action<EditorControl, MonkeyspeakException, SourcePosition, Severity> Error, Warning, Info;
+        public static event Action<EditorControl, int> ClearedLine;
+
+        public static event Action<EditorControl, SyntaxError> Error, Warning, Info;
 
         public static bool Enabled => Properties.Settings.Default.SyntaxCheckingEnabled;
 
@@ -49,6 +52,8 @@ namespace Monkeyspeak.Editor.Syntax
             else Logger.Debug<SyntaxChecker>("Failed to register service");
             textMarkers.Add(editor, textMarkerService);
 
+            errors.Add(editor, new List<SyntaxError>());
+
             page = MonkeyspeakRunner.CurrentPage;
         }
 
@@ -59,23 +64,40 @@ namespace Monkeyspeak.Editor.Syntax
             textMarkers.Remove((EditorControl)sender);
         }
 
+        public static IEnumerable<SyntaxError> GetErrors(EditorControl editor)
+        {
+            return errors[editor];
+        }
+
         public static void Check(EditorControl editor, int line = -1, string text = null)
         {
             if (!Enabled) return;
             editor.Dispatcher.Invoke(() =>
             {
-                if (line == -1) text = editor.textEditor.Text;
-                else text = editor.textEditor.Document.GetText(editor.textEditor.Document.GetLineByNumber(line));
+                SourcePosition pos = default(SourcePosition);
+                if (line == -1)
+                {
+                    ClearAllMarkers(editor);
+                    text = editor.textEditor.Text;
+                }
+                else
+                {
+                    pos = new SourcePosition(line, 1, line + 1);
+                    ClearMarker(pos, editor);
+                    text = editor.textEditor.Document.GetText(editor.textEditor.Document.GetLineByNumber(line));
+                }
                 if (string.IsNullOrWhiteSpace(text)) return;
                 using (var memory = new MemoryStream(Encoding.Default.GetBytes(text)))
                 {
-                    SourcePosition pos = new SourcePosition(line, 1, line + 1);
-                    if (line == -1) ClearAllMarkers(editor);
-                    else ClearMarker(pos, editor);
                     Parser parser = new Parser(MonkeyspeakRunner.Engine);
                     Lexer lexer = new Lexer(MonkeyspeakRunner.Engine, new SStreamReader(memory));
                     lexer.Error += ex => AddMarker(line == -1 ? ex.SourcePosition : pos, editor, ex.Message);
-                    lexer.Error += ex => Error?.Invoke(editor, ex, line == -1 ? ex.SourcePosition : pos, Severity.Error);
+                    lexer.Error += ex =>
+                    {
+                        var error = new SyntaxError { Editor = editor, Exception = ex, SourcePosition = line == -1 ? ex.SourcePosition : pos, Severity = Severity.Error };
+                        errors[editor].Add(error);
+                        Error?.Invoke(editor, error);
+                    };
                     foreach (var trigger in parser.Parse(lexer))
                     {
                         if (line != -1)
@@ -83,7 +105,15 @@ namespace Monkeyspeak.Editor.Syntax
                         if (page != null && !page.Libraries.Any(lib => lib.Contains(trigger.Category, trigger.Id)))
                         {
                             AddMarker(line == -1 ? trigger.SourcePosition : pos, editor, severity: Severity.Warning);
-                            Warning?.Invoke(editor, new MonkeyspeakException($"{trigger} does not have a handler associated to it that could be found."), line == -1 ? trigger.SourcePosition : pos, Severity.Warning);
+                            SyntaxError error = new SyntaxError
+                            {
+                                Editor = editor,
+                                Exception = new MonkeyspeakException($"{trigger} does not have a handler associated to it that could be found."),
+                                SourcePosition = line == -1 ? trigger.SourcePosition : pos,
+                                Severity = Severity.Warning
+                            };
+                            errors[editor].Add(error);
+                            Warning?.Invoke(editor, error);
                         }
                     }
                 }
@@ -165,14 +195,18 @@ namespace Monkeyspeak.Editor.Syntax
 
         public static void ClearMarker(SourcePosition sourcePosition, EditorControl editor)
         {
+            ClearedLine?.Invoke(editor, sourcePosition.Line);
             var line = editor.textEditor.Document.GetLineByNumber(sourcePosition.Line);
             var textMarker = textMarkers[editor];
+            errors[editor].RemoveAll(err => err.SourcePosition.Line == sourcePosition.Line);
             textMarker.RemoveAll(marker => marker.StartOffset >= line.Offset && marker.EndOffset <= line.EndOffset);
         }
 
         public static void ClearAllMarkers(EditorControl editor)
         {
+            Cleared?.Invoke(editor);
             var textMarker = textMarkers[editor];
+            errors[editor].RemoveAll(err => true);
             textMarker.RemoveAll(marker => true);
             Cleared?.Invoke(editor);
         }
