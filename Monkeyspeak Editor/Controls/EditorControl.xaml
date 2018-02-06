@@ -76,6 +76,11 @@
             <MenuItem Header="Open" Command="{x:Static commands:MonkeyspeakCommands.Open}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Command.ToolTip}" />
             <MenuItem Header="Navigate to Document in Explorer" Command="{x:Static commands:MonkeyspeakCommands.NavigateTo}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Command.ToolTip}" />
             <Separator />
+            <MenuItem Header="Collaborate">
+                <MenuItem Header="Create" />
+                <MenuItem Header="Open" />
+            </MenuItem>
+            <Separator />
             <MenuItem Header="Close" Command="{x:Static commands:MonkeyspeakCommands.Close}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Command.ToolTip}" />
         </ContextMenu>
     </Controls:MetroTabItem.ContextMenu>
@@ -89,7 +94,7 @@
                 <ip:PackIconMaterial Kind="ContentSaveOutline" />
             </Button>
             <Button Command="{x:Static commands:MonkeyspeakCommands.SaveAll}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Command.ToolTip}"
-                    IsEnabled="{Binding Source={x:Static local:Editors.Instance}, Path=AnyHasChanges}">
+                    IsEnabled="True">
                 <ip:PackIconMaterial Kind="ContentSaveAll" />
             </Button>
             <Button Command="{x:Static commands:MonkeyspeakCommands.New}" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Command.ToolTip}">
