@@ -10,11 +10,11 @@ namespace Monkeyspeak.Utils
 {
     public class ReflectionHelper
     {
-        private static List<Assembly> all;
+        private static bool cached = false;
 
-        public static Type[] GetAllTypesWithAttributeInMembers<T>(Assembly assembly) where T : Attribute
+        public static Type[] GetAllTypesWithAttributeInMembers<T>(Assembly asm) where T : Attribute
         {
-            return assembly.GetTypes().Where(type => type.GetMembers().Any(member => member.GetCustomAttribute<T>() != null)).ToArray();
+            return GetAllTypesInAssembly(asm).Where(type => type.GetMembers().Any(member => member.GetCustomAttribute<T>() != null)).ToArray();
         }
 
         public static IEnumerable<T> GetAllAttributesFromMethod<T>(MethodInfo methodInfo) where T : Attribute
@@ -96,14 +96,15 @@ namespace Monkeyspeak.Utils
         /// <returns></returns>
         public static IEnumerable<Type> GetAllTypesInAssembly(Assembly asm)
         {
-            Type[] types;
+            IEnumerable<Type> types = Enumerable.Empty<Type>();
+            if (asm == null) return types;
             try
             {
                 types = asm.GetTypes();
             }
             catch (ReflectionTypeLoadException e)
             {
-                return e.Types.Where(t => t != null);
+                types = e.Types.Where(t => t != null);
             }
             return types;
         }
@@ -114,25 +115,22 @@ namespace Monkeyspeak.Utils
         /// <returns></returns>
         public static IEnumerable<Assembly> GetAllAssemblies()
         {
-            if (all != null && all.Count > 0) return all;
-            all = new List<Assembly>();
+            if (cached) return AppDomain.CurrentDomain.GetAssemblies();
+            //all = new List<Assembly>();
             foreach (string asmFile in Directory.EnumerateFiles(Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory), "*.*", SearchOption.TopDirectoryOnly)
                                         .Where(s => s.EndsWith(".dll") || s.EndsWith(".exe")))
             {
                 if (TryLoadAssemblyFromFile(asmFile, out var asm))
                 {
-                    all.AddIfUnique(asm);
+                    try
+                    {
+                        AppDomain.CurrentDomain.Load(asm.GetName());
+                    }
+                    catch { }
                 }
             }
-
-            foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
-            {
-                // avoid all the Microsoft and System assemblies.  All assesmblies it is looking for should be in the local path
-                if (asm.GlobalAssemblyCache) continue;
-
-                all.AddIfUnique(asm);
-            }
-            return all;
+            cached = true;
+            return AppDomain.CurrentDomain.GetAssemblies();
         }
 
         /// <summary>
@@ -140,7 +138,7 @@ namespace Monkeyspeak.Utils
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>
-        ///   <c>true</c> if [the specified type] has a no-arg constructor; otherwise, <c>false</c>.
+        /// <c>true</c> if [the specified type] has a no-arg constructor; otherwise, <c>false</c>.
         /// </returns>
         public static bool HasNoArgConstructor(Type type)
         {
@@ -151,7 +149,7 @@ namespace Monkeyspeak.Utils
         /// Tries the load assembly from file.
         /// </summary>
         /// <param name="assemblyFile">The assembly file.</param>
-        /// <param name="asm">The asm.</param>
+        /// <param name="asm">         The asm.</param>
         /// <returns></returns>
         public static bool TryLoadAssemblyFromFile(string assemblyFilePath, out Assembly asm)
         {
@@ -175,7 +173,7 @@ namespace Monkeyspeak.Utils
         /// Tries the load assembly.
         /// </summary>
         /// <param name="assemblyName">The assembly string.</param>
-        /// <param name="asm">The asm.</param>
+        /// <param name="asm">         The asm.</param>
         /// <returns></returns>
         public static bool TryLoadAssemblyFromName(AssemblyName assemblyName, out Assembly asm)
         {
@@ -200,7 +198,7 @@ namespace Monkeyspeak.Utils
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="type">The type.</param>
-        /// <param name="obj">The object.</param>
+        /// <param name="obj"> The object.</param>
         /// <param name="args">The arguments.</param>
         /// <returns></returns>
         public static bool TryCreate<T>(Type type, out T obj, params object[] args)
@@ -227,7 +225,7 @@ namespace Monkeyspeak.Utils
         /// Tries to create the specfied type.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="obj">The object.</param>
+        /// <param name="obj"> The object.</param>
         /// <param name="args">The arguments.</param>
         /// <returns><c>true</c> if type was created; otherwise <c>false</c></returns>
         public static bool TryCreate<T>(out T obj, params object[] args)
