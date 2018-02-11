@@ -19,7 +19,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\build\Debug\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -28,7 +28,7 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\build\Release\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -42,14 +42,11 @@
     <ApplicationIcon>if_face-monkey_30313.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ControlzEx, Version=3.0.2.4, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\ControlzEx.3.0.2.4\lib\net45\ControlzEx.dll</HintPath>
-    </Reference>
     <Reference Include="ICSharpCode.AvalonEdit, Version=5.0.3.0, Culture=neutral, PublicKeyToken=9cc39be672370310, processorArchitecture=MSIL">
       <HintPath>..\packages\AvalonEdit.5.0.4\lib\Net40\ICSharpCode.AvalonEdit.dll</HintPath>
     </Reference>
-    <Reference Include="MahApps.Metro, Version=1.6.0.184, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\MahApps.Metro.1.6.0-alpha0184\lib\net45\MahApps.Metro.dll</HintPath>
+    <Reference Include="MahApps.Metro, Version=1.5.0.23, Culture=neutral, PublicKeyToken=f4fb5a3c4d1e5b4f, processorArchitecture=MSIL">
+      <HintPath>..\packages\MahApps.Metro.1.5.0\lib\net45\MahApps.Metro.dll</HintPath>
     </Reference>
     <Reference Include="MahApps.Metro.IconPacks.FontAwesome, Version=2.0.0.31, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MahApps.Metro.IconPacks.FontAwesome.2.0.0\lib\net46\MahApps.Metro.IconPacks.FontAwesome.dll</HintPath>
@@ -72,8 +69,7 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Runtime.Remoting" />
     <Reference Include="System.Windows.Interactivity, Version=4.5.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\ControlzEx.3.0.2.4\lib\net45\System.Windows.Interactivity.dll</HintPath>
-      <Private>True</Private>
+      <HintPath>..\packages\MahApps.Metro.1.5.0\lib\net45\System.Windows.Interactivity.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -290,7 +286,24 @@ rar a -r -x*.tmp -x*.rar -x*.tt "$(TargetDir)$(TargetName)_$(ConfigurationName)_
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>powershell -NoLogo -NonInteractive -ExecutionPolicy Unrestricted -Command $(SolutionDir)patchAppVeyorVersion.ps1 -SolutionDir '$(SolutionDir)' -ProjectDir '$(ProjectDir)' -TargetDir '$(TargetDir)' -TargetPath '$(TargetPath)' -ConfigurationName '$(ConfigurationName)'
+
+REM powershell -NoLogo -NonInteractive -ExecutionPolicy Unrestricted -Command $(SolutionDir)protectAppConfig.ps1 -SolutionDir '$(SolutionDir)' -ProjectDir '$(ProjectDir)' -TargetDir '$(TargetDir)' -TargetPath '$(TargetPath)' -ConfigurationName '$(ConfigurationName)'
+
+REM DEL old files
+cd $(TargetDir)
+del "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Src.rar"
+del "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Binaries.rar"
+
+REM set path to WinRAR for rar command
+set path="C:\Program Files\WinRAR\";%25path%25
+
+REM Create the BIN rar
+rar a -r -x*\.svn\* -x*\bin\* -x*\obj\* -x*.tmp -x*.rar -x*.tt -x*.user "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Binaries.rar" *.*
+
+REM Create the SRC rar
+cd $(ProjectDir)
+rar a -r -x*\.svn\* -x*\bin\* -x*\obj\* -x*.tmp -x*.rar -x*.tt -x*.user  "$(TargetDir)$(TargetName)_$(PlatformName)_Src.rar" *.*
+	</PostBuildEvent>
   </PropertyGroup>
 </Project>

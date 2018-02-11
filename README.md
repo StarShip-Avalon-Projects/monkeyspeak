@@ -30,14 +30,15 @@ Monkeyspeak aims to give the end-user a very easy to use scripting language.
 + Double (with -+ and exponent support)
 + Strings (Unicode)
 + Tables (Dictionary objects with a configurable limit)
++ Constants (unmodifiable variables)
 
 - [Core Library]
 + Sys (triggers that support core Monkeyspeak tasks like setting variables)
-! Math (very basic math operations + - / *)
-! StringOperations (very basic string operations)
-! IO (basic file operations)
++ Math (very basic math operations + - / *)
++ StringOperations (very basic string operations)
++ IO (basic file operations)
 + Timers (basic timer support with optional delay)
-! Tables (supports the for each trigger)
++ Tables (supports the for each trigger)
 + Loops (supports while loop and possibly more in the future)
 ```
 
@@ -130,7 +131,7 @@ To execute the [Advanced Usage](#advanced-usage) example, it is no different
 than [Basic Usage](#basic-usage)'s execution example.
 
 #### Monkeyspeak Editor
-Yes there is a editor in there.  As of right now it is in early pre-release alpha.
+Yes there is a editor in there.  See [Editor](wiki/Editor.md)
 
 #### Guides
 1) :book: [Triggers](wiki/Triggers.md)
