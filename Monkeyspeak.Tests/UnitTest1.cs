@@ -123,9 +123,15 @@ namespace MonkeyspeakTests
     (5:100) set %myTable[123] to {1}
     (6:250) for each entry in table %myTable put it into %entry,
         (5:102) print {%entry} to the console.
-    (6:454) after the loop is done,
+    (6:457) after the loop is done,
         (5:150) take variable %myTable[123] and add 1 to it.
         (5:102) print {%myTable[123]} to the console.
+        (5:254) with table %myTable create a copy between keys {1} and {3} and put it into table %copy
+    (6:250) for each entry in table %copy put it into %entry,
+        (5:102) print {Copy: %entry} to the console.
+    (6:457) after the loop is done,
+        (6:456) repeat 6 times,
+            (5:102) print {weeee!} to the console.
 
 (0:0) when the script is started,
     (5:101) set %answer to 0
@@ -136,7 +142,7 @@ namespace MonkeyspeakTests
             (5:450) exit the current loop.
         (1:103) and variable %answer does not equal 21,
             (5:150) take variable %answer and add 1 to it.
-    (6:454) after the loop is done,
+    (6:457) after the loop is done,
         (5:102) print {We may never know the answer...but the answer right now is %answer} to the console.
 
 (0:0) when the script is started,
@@ -144,7 +150,7 @@ namespace MonkeyspeakTests
     (5:100) set %myTable[123] to {123}
     (6:250) for each entry in table %mytable put it into %entry,
         (5:102) print {%entry} to the console.
-    (6:454) after the loop is done,
+    (6:457) after the loop is done,
         (5:102) print {%mytable[123]} to the console.
 ";
 
@@ -237,8 +243,8 @@ namespace MonkeyspeakTests
 		(5:102) print {%index} to the log.
 		(5:403) with {%str} replace all occurances of {a} with {the} and put it into variable %replace.
 		(5:102) print {%replace} to the log.
-		(5:404) with {%str} get everything left of {a} and put it into variable %iam
-		(5:102) print {%iam} to the log.
+		(5:404) with {%str} get everything left of {string} and put it into variable %iama
+		(5:102) print {%iama} to the log.
 		(5:405) with {%str} get everything right most left of {a} and put it into variable %IamastringIam
 		(5:102) print {%IamastringIam} to the log.
 		(5:406) with {%str} get everything right of {,} and put it into variable %Iamastring
