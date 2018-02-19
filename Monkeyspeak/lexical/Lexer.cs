@@ -380,7 +380,7 @@ namespace Monkeyspeak
                 int c = reader.Read();
                 if (c != -1)
                 {
-                    if (c == '\n') //|| (before == '\r' && c == '\n'))
+                    if (c == '\n')
                     {
                         lineNo++;
                         columnNo = 0;

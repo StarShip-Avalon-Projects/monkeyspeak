@@ -18,6 +18,7 @@ using Monkeyspeak.Lexical;
 using System.Net.NetworkInformation;
 using System.Net;
 using Monkeyspeak.Tests;
+using Monkeyspeak.Extensions;
 
 namespace MonkeyspeakTests
 
@@ -119,9 +120,7 @@ namespace MonkeyspeakTests
     (5:100) set %myTable[1] to {%hello}
     (5:100) set %myTable[2] to {%hello}
     (5:100) set %myTable[3] to {%hello}
-    (5:100) set %myTable[4] to {%hello}
-    (5:100) set %myTable[5] to {%hello}
-    (5:100) set %myTable[6] to {%hello}
+    (5:100) set %myTable[123] to {1}
     (6:250) for each entry in table %myTable put it into %entry,
         (5:102) print {%entry} to the console.
     (6:454) after the loop is done,
@@ -135,12 +134,14 @@ namespace MonkeyspeakTests
         (5:150) take variable %answer and add 1 to it.
         (1:102) and variable %answer equals 21,
             (5:450) exit the current loop.
+        (1:103) and variable %answer does not equal 21,
+            (5:150) take variable %answer and add 1 to it.
     (6:454) after the loop is done,
         (5:102) print {We may never know the answer...but the answer right now is %answer} to the console.
 
 (0:0) when the script is started,
     (5:250) create a table as %mytable
-    (5:251) with table %mytable put 123 in it at key {123}.
+    (5:100) set %myTable[123] to {123}
     (6:250) for each entry in table %mytable put it into %entry,
         (5:102) print {%entry} to the console.
     (6:454) after the loop is done,
@@ -192,7 +193,15 @@ namespace MonkeyspeakTests
             var engine = new MonkeyspeakEngine();
             engine.Options.Debug = true;
 
-            Logger.Info(tableScript);
+            StringBuilder sb = new StringBuilder();
+            var lines = tableScript.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+            for (int i = 0; i <= lines.Length - 1; i++)
+            {
+                if (!string.IsNullOrWhiteSpace(lines[i]))
+                    sb.Append($"[{i + 1}]").AppendLine(lines[i]);
+            }
+            Logger.Info(sb.ToString());
+
             Page page = engine.LoadFromString(tableScript); // replace with tableScriptMini to see results of that script
 
             page.Error += DebugAllErrors;
@@ -206,7 +215,7 @@ namespace MonkeyspeakTests
             page.Execute();
             foreach (var variable in page.Scope)
             {
-                //Logger.Info($"{variable.ToString()} {variable.GetType().Name}");
+                Logger.Info($"{variable.ToString()} {variable.GetType().Name}");
             }
         }
 
@@ -274,24 +283,28 @@ namespace MonkeyspeakTests
         (5:102) print {equals %num} to the console.
     (1:102) and variable %num equals 2
         (5:102) print {wtf} to the console.
+        (5:102) print {1} to the console.
 
 (0:0) when the script is started,
     (1:104) and variable %hello equals {Hello World}
     (1:104) and variable %hello equals {Hello World}
         (5:102) print {Will show} to the console.
+        (5:102) print {2} to the console.
 
 (0:0) when the script is started,
     (1:104) and variable %hello equals {Hello World}
     (1:104) and variable %hello equals {this will be false move on to next condition}
     (1:104) and variable %hello equals {Hello World}
         (5:102) print {Will not show even though the first was true} to the console.
-        (5:102) print {wtf} to the console.
+        (5:102) print {should not show} to the console.
+    (1:104) and variable %hello equals {Hello World}
+        (5:102) print {3} to the console.
 
 (0:0) when the script is started,
     (1:104) and variable %hello equals {this will be false move on to next condition}
     (1:104) and variable %hello equals {Minty!}
         (5:102) print {Will not show} to the console.
-        (5:102) print {wtf} to the console.
+        (5:102) print {4} to the console.
 ";
             Page page = engine.LoadFromString(script);
 
