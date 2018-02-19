@@ -23,6 +23,7 @@ using Monkeyspeak.Editor.Syntax;
 using Monkeyspeak.Editor.Utils;
 using Monkeyspeak.Editor.Commands;
 using Monkeyspeak.Editor.Collaborate;
+using ICSharpCode.AvalonEdit.Folding;
 
 namespace Monkeyspeak.Editor.Controls
 {
@@ -59,6 +60,8 @@ namespace Monkeyspeak.Editor.Controls
         private MonkeyspeakEngine engine;
         private readonly Page page;
 
+        private FoldingManager foldingManager;
+
         private FileSystemWatcher fileWatcher;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -78,6 +81,7 @@ namespace Monkeyspeak.Editor.Controls
 
             //textEditor.SyntaxHighlighting = HighlightingManager.Instance.GetDefinitionByExtension(".ms");
             SearchPanel.Install(textEditor);
+            foldingManager = FoldingManager.Install(textEditor.TextArea);
             SyntaxChecker.Install(this);
 
             textEditor.TextArea.Caret.PositionChanged += (sender, e) =>
@@ -104,6 +108,7 @@ namespace Monkeyspeak.Editor.Controls
                     {
                         MonkeyspeakCommands.Open.Execute(file);
                     }
+                    e.Handled = true;
                 }
             };
             textEditor.TextArea.TextEntered += (sender, e) =>
@@ -118,6 +123,7 @@ namespace Monkeyspeak.Editor.Controls
                     Plugins.PluginsManager.AllEnabled = true;
                     Plugins.PluginsManager.OnEditorTextChanged(this);
                 }
+                e.Handled = false;
             };
             textEditor.TextArea.TextEntering += (sender, e) =>
             {
@@ -129,6 +135,7 @@ namespace Monkeyspeak.Editor.Controls
                     }
                     SyntaxChecker.Check(this, CaretLine);
                 }
+                e.Handled = false;
             };
 
             LineAdded += (text, line) =>
@@ -151,6 +158,12 @@ namespace Monkeyspeak.Editor.Controls
                 {
                     SyntaxChecker.Check(this, CaretLine);
                 }
+                else if (e.Key == Key.Return)
+                {
+                    SyntaxChecker.Check(this, CaretLine);
+                    foldingManager.Clear();
+                    foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
+                }
                 e.Handled = false;
             };
             textEditor.PreviewMouseHover += (sender, e) =>
@@ -170,6 +183,7 @@ namespace Monkeyspeak.Editor.Controls
             textEditor.Options.InheritWordWrapIndentation = false;
             textEditor.ShowLineNumbers = true;
             textEditor.TextArea.IndentationStrategy = new MonkeyspeakIndentationStrategy();
+            textEditor.Options.ShowBoxForControlCharacters = true;
 
             Visibility = Visibility.Visible;
 
@@ -462,6 +476,7 @@ namespace Monkeyspeak.Editor.Controls
                 textEditor.Document.UndoStack.MarkAsOriginalFile();
             }
             Plugins.PluginsManager.AllEnabled = true;
+            foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
             return opened ?? false;
         }
 
@@ -559,6 +574,7 @@ namespace Monkeyspeak.Editor.Controls
             }
             HasChanges = false;
             Plugins.PluginsManager.AllEnabled = true;
+            foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
         }
 
         public async Task<bool> Close()
