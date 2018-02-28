@@ -18,6 +18,7 @@ namespace Monkeyspeak.Editor.HelperClasses
 
         public MonkeyspeakIndentationStrategy()
         {
+            page = new Page(MonkeyspeakRunner.Engine);
             parser = new Parser(MonkeyspeakRunner.Engine);
         }
 
