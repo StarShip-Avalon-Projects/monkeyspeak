@@ -161,6 +161,7 @@ namespace Monkeyspeak.Editor.Controls
                 {
                     SyntaxChecker.Check(this, CaretLine);
                     foldingManager.Clear();
+                    foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
                 }
                 e.Handled = false;
             };
@@ -180,7 +181,7 @@ namespace Monkeyspeak.Editor.Controls
             textEditor.Options.CutCopyWholeLine = true;
             textEditor.Options.InheritWordWrapIndentation = false;
             textEditor.ShowLineNumbers = true;
-            textEditor.TextArea.IndentationStrategy = new MonkeyspeakIndentationStrategy();
+            //textEditor.TextArea.IndentationStrategy = new MonkeyspeakIndentationStrategy();
             textEditor.Options.ShowBoxForControlCharacters = true;
 
             Visibility = Visibility.Visible;
@@ -475,6 +476,7 @@ namespace Monkeyspeak.Editor.Controls
                 textEditor.Document.UndoStack.MarkAsOriginalFile();
             }
             Plugins.PluginsManager.AllEnabled = true;
+            foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
             return opened ?? false;
         }
 
@@ -572,6 +574,7 @@ namespace Monkeyspeak.Editor.Controls
             }
             HasChanges = false;
             Plugins.PluginsManager.AllEnabled = true;
+            foldingManager.UpdateFoldings(MSFoldingStrategy.Generate(textEditor.TextArea), 0);
         }
 
         public async Task<bool> Close()
