@@ -65,22 +65,9 @@ namespace Monkeyspeak.Editor
             var localAppDataPath = System.IO.Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Monkeyspeak", "logs");
             Logger.LogOutput = new MultiLogOutput(new FileLogOutput(localAppDataPath), new FileLogOutput(localAppDataPath, Level.Debug));
 
-            AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
-            {
-                if (e.ExceptionObject is Exception ex)
-                {
-                    ex.Log();
-                    if (ex.TargetSite == lastException?.TargetSite)
-                    {
-                        new ForceSaveAllCommand().Execute(null);
-                        Application.Current.Shutdown(404);
-                    }
-                    lastException = ex;
-                }
-            };
-
             if (SingleInstance<App>.InitializeAsFirstInstance("Monkeyspeak_Editor"))
             {
+                AppDomain.CurrentDomain.UnhandledException += (sender, e) => Logger.Error($"{sender.GetType().Name}: {e.ExceptionObject}");
                 var app = new App();
                 app.Run();
 

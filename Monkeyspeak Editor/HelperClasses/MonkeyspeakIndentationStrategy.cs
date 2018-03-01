@@ -20,6 +20,7 @@ namespace Monkeyspeak.Editor.HelperClasses
         {
             page = new Page(MonkeyspeakRunner.Engine);
             parser = new Parser(MonkeyspeakRunner.Engine);
+            page = MonkeyspeakRunner.CurrentPage;
         }
 
         public void IndentLine(TextDocument document, DocumentLine line)
