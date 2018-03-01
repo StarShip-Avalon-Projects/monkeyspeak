@@ -39,7 +39,7 @@ namespace Monkeyspeak.Libraries
             this.Interval = interval;
             Delay = delay;
             FirstRun = true;
-            Timer = new System.Timers.Timer(TimeSpan.FromSeconds(Interval).TotalMilliseconds)
+            Timer = new System.Timers.Timer(TimeSpan.FromSeconds(Interval).Milliseconds)
             {
                 AutoReset = true
             };
