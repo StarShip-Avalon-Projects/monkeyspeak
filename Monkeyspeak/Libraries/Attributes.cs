@@ -30,7 +30,7 @@ namespace Monkeyspeak.Libraries
     }
 
     [System.AttributeUsage(AttributeTargets.Method, Inherited = false, AllowMultiple = true)]
-    public abstract class TriggerParameterAttribute : Attribute
+    public class TriggerParameterAttribute : Attribute
     {
         private readonly string description;
 
