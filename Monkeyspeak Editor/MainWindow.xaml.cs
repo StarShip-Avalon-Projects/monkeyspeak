@@ -94,20 +94,22 @@ namespace Monkeyspeak.Editor
                 else notif_badge.Badge = count;
             });
 
-            Editors.Instance.Added += editor => this.Dispatcher.Invoke(() =>
-            {
-                if (!docs.Items.Contains(editor)) docs.Items.Add(editor);
-                ((MetroAnimatedSingleRowTabControl)editor.Parent).SelectedItem = editor;
-                editor.LineAdded += delegate { line_count.Text = editor.TriggerCount.ToString(); };
-            });
-            Editors.Instance.Removed += editor => this.Dispatcher.Invoke(() => docs.Items.Remove(editor));
-            Editors.Instance.SelectionChanged += editor => this.Dispatcher.Invoke(() => line_count.Text = editor.TriggerCount.ToString());
-
             SyntaxChecker.Info += SyntaxChecker_Event;
             SyntaxChecker.Warning += SyntaxChecker_Event;
             SyntaxChecker.Error += SyntaxChecker_Event;
             SyntaxChecker.Cleared += SyntaxChecker_Cleared;
             SyntaxChecker.ClearedLine += SyntaxChecker_ClearedLine;
+
+            Editors.Instance.Added += editor => this.Dispatcher.Invoke(() =>
+            {
+                if (!docs.Items.Contains(editor)) docs.Items.Add(editor);
+                ((MetroAnimatedSingleRowTabControl)editor.Parent).SelectedItem = editor;
+                editor.LineAdded += delegate { line_count.Text = editor.TriggerCount.ToString(); };
+                SyntaxChecker.Check(editor);
+            });
+
+            Editors.Instance.Removed += editor => this.Dispatcher.Invoke(() => docs.Items.Remove(editor));
+            Editors.Instance.SelectionChanged += editor => this.Dispatcher.Invoke(() => line_count.Text = editor.TriggerCount.ToString());
 
             errors_list.SelectionMode = SelectionMode.Extended;
             errors_list.PreviewKeyDown += (sender, e) =>
@@ -127,12 +129,11 @@ namespace Monkeyspeak.Editor
                     }
                 }
             };
-            errors_flyout.IsOpenChanged += (sender, e) =>
+            errors_flyout_scroll.PreviewMouseWheel += (sender, e) =>
             {
-                if (errors_flyout.IsOpen)
-                    Editors.Instance.Selected?.textEditor?.Focus();
-                else if (Intellisense.IsOpen)
-                    Intellisense.GenerateTriggerListCompletion(Editors.Instance.Selected);
+                ScrollViewer scv = (ScrollViewer)sender;
+                scv.ScrollToVerticalOffset(scv.VerticalOffset - e.Delta);
+                e.Handled = true;
             };
 
             Loaded += MainWindow_Loaded;
@@ -284,7 +285,7 @@ namespace Monkeyspeak.Editor
 
             VirtualizingStackPanel content = new VirtualizingStackPanel()
             {
-                Orientation = Orientation.Horizontal
+                Orientation = Orientation.Horizontal,
             };
             TextBlock lineInfo = new TextBlock { Text = $"Line {error.SourcePosition.Line}, Col {error.SourcePosition.Column}" };
             TextBlock source = new TextBlock { Text = System.IO.Path.GetFileName(editor.CurrentFilePath ?? editor.Title), Foreground = Brushes.DarkCyan };
@@ -310,11 +311,16 @@ namespace Monkeyspeak.Editor
             });
             content.Children.Add(new TextBlock { IsHyphenationEnabled = true, Text = error.Exception.Message, FontWeight = FontWeights.Bold, FontStyle = FontStyles.Italic, Foreground = brush });
             item.Content = content;
+            Editors.Instance.SelectionChanged += editorCtrl =>
+            {
+                editorCtrl.Dispatcher.Invoke(() =>
+                {
+                    item.Visibility = editorCtrl == editor ? Visibility.Visible : Visibility.Collapsed;
+                });
+            };
             errors_list.Items.Add(item);
             if (errors_flyout.IsOpen == false && error.Severity == SyntaxChecker.Severity.Error ||
-                (error.Severity == SyntaxChecker.Severity.Warning &&
-                Settings.AutoOpenOnWarning &&
-                Settings.ShowWarnings))
+                (error.Severity == SyntaxChecker.Severity.Warning && Settings.AutoOpenOnWarning))
             {
                 errors_flyout.IsOpen = true;
             }
@@ -326,8 +332,6 @@ namespace Monkeyspeak.Editor
 
             Settings.Saving += Settings_Saving;
             Settings.Save();
-
-            Dispatcher.Invoke(async () => await Check());
         }
 
         private void MetroWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
@@ -398,7 +402,7 @@ namespace Monkeyspeak.Editor
         {
             Dispatcher.Invoke(() =>
             {
-                var selectedEditor = (((MetroAnimatedSingleRowTabControl)sender).SelectedItem as EditorControl);
+                var selectedEditor = e.AddedItems[0] as EditorControl;
                 if (selectedEditor != null)
                     Editors.Instance.Selected = selectedEditor;
             });
@@ -443,13 +447,19 @@ namespace Monkeyspeak.Editor
             return theme;
         }
 
-        public async Task Check()
+        public async Task UpdateCheck()
         {
             var userVersion = Assembly.GetExecutingAssembly().GetName().Version;
             var web = new WebClient();
-            var release = await Github.GetLatestRelease();
+            Release release = null;
+            try
+            {
+                release = await Github.GetLatestRelease();
+            }
+            catch { }
             // in case internet is not connected or other issue return to prevent a nagging dialog
             if (release == null || release.Prerelease || release.Draft) return;
+            Logger.Debug(release.Body);
             var currentVersion = new Version(release.Body.RightOf('[').LeftOf(']'));
             if (currentVersion > userVersion)
             {
@@ -458,7 +468,8 @@ namespace Monkeyspeak.Editor
                     if (asset.Name.Contains("Editor") && asset.Name.Contains("Binaries"))
                     {
                         var result = DialogManager.ShowModalMessageExternal(System.Windows.Application.Current.MainWindow as MetroWindow,
-                                    "Update Found!", $"A update was found ({userVersion} -> {currentVersion}), would you like to download the latest version?", MessageDialogStyle.AffirmativeAndNegative,
+                                    "Update Found!", $"A update was found ({userVersion} -> {currentVersion}), would you like to download the latest version? (You will need to replace the contents of the rar download into this directory)",
+                                    MessageDialogStyle.AffirmativeAndNegative,
                                     new MetroDialogSettings { DefaultButtonFocus = MessageDialogResult.Affirmative, AffirmativeButtonText = "Yes!", NegativeButtonText = "No" });
 
                         if (result == MessageDialogResult.Affirmative)
@@ -509,6 +520,8 @@ namespace Monkeyspeak.Editor
 
         private void errors_flyout_button_Click(object sender, RoutedEventArgs e)
         {
+            if (!Editors.Instance.IsEmpty)
+                SyntaxChecker.Check(Editors.Instance.Selected);
             errors_flyout.IsOpen = !errors_flyout.IsOpen;
         }
 
