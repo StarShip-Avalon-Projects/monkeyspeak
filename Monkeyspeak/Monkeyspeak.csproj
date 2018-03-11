@@ -239,19 +239,8 @@ rar a -r -x*.tmp -x*.rar -x*.tt "$(TargetDir)$(TargetName)_$(ConfigurationName)_
 </PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <PostBuildEvent>powershell -NoLogo -NonInteractive -ExecutionPolicy Unrestricted -Command $(SolutionDir)patchAppVeyorVersion.ps1 -SolutionDir '$(SolutionDir)' -ProjectDir '$(ProjectDir)' -TargetDir '$(TargetDir)' -TargetPath '$(TargetPath)' -ConfigurationName '$(ConfigurationName)'
-
-REM DEL old files
-cd $(TargetDir)
-del "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Src.tar"
-del "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Binaries.tar"
-
-REM Create the BIN rar
-7z a "$(TargetDir)$(TargetName)_$(ConfigurationName)_$(PlatformName)_Binaries.tar" *.* -y -r  -x!*\.svn\* -x!*\bin\* -x!*\obj\* -x!*.tmp -x!*.rar -x!*.tar -x!*.tt -x!*.user
-
-REM Create the SRC rar
-cd $(ProjectDir)
-7z a "$(TargetDir)$(TargetName)_$(PlatformName)_Src.tar" *.* -y -r  -x!*\.svn\* -x!*\bin\* -x!*\obj\* -x!*.tmp -x!*.rar -x!*.tar -x!*.tt -x!*.user</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <!--   <ProjectExtensions>
     <VisualStudio>
