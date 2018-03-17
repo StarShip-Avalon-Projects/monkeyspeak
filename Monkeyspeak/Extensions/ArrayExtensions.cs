@@ -6,8 +6,20 @@ using System.Threading.Tasks;
 
 namespace Monkeyspeak.Extensions
 {
+    /// <summary>
+    ///
+    /// </summary>
     public static class ArrayExtensions
     {
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="arr">The arr.</param>
+        /// <param name="seperator">The seperator.</param>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public static string ToString<T>(this T[] arr, char seperator = ',')
         {
             StringBuilder sb = new StringBuilder();
@@ -20,6 +32,15 @@ namespace Monkeyspeak.Extensions
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="arr">The arr.</param>
+        /// <param name="seperator">The seperator.</param>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public static string ToString<T>(this T[] arr, string seperator = ", ")
         {
             StringBuilder sb = new StringBuilder();
@@ -32,6 +53,16 @@ namespace Monkeyspeak.Extensions
             return sb.ToString();
         }
 
+        /// <summary>
+        /// Returns a <see cref="System.String" /> that represents this instance.
+        /// </summary>
+        /// <typeparam name="K"></typeparam>
+        /// <typeparam name="V"></typeparam>
+        /// <param name="arr">The arr.</param>
+        /// <param name="seperator">The seperator.</param>
+        /// <returns>
+        /// A <see cref="System.String" /> that represents this instance.
+        /// </returns>
         public static string ToString<K, V>(this IDictionary<K, V> arr, char seperator = ',')
         {
             StringBuilder sb = new StringBuilder();

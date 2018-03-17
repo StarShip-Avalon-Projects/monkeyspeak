@@ -13,7 +13,7 @@ namespace Monkeyspeak
     [Serializable]
     public class MonkeyspeakSyntaxException : Exception
     {
-        public MonkeyspeakSyntaxException()
+        public MonkeyspeakSyntaxException() : base()
         {
         }
 
@@ -36,7 +36,7 @@ namespace Monkeyspeak
     [Serializable]
     public class MonkeyspeakException : Exception
     {
-        public MonkeyspeakException()
+        public MonkeyspeakException() : base()
         {
         }
 
