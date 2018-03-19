@@ -8,8 +8,16 @@ using System.Threading.Tasks;
 
 namespace Monkeyspeak.Libraries
 {
+    /// <summary>
+    ///
+    /// </summary>
+    /// <seealso cref="BaseLibrary" />
     public class Sys : BaseLibrary
     {
+        /// <summary>
+        /// Initializes this instance. Add your trigger handlers here.
+        /// </summary>
+        /// <param name="args">Parametized argument of objects to use to pass runtime objects to a library at initialization</param>
         public override void Initialize(params object[] args)
         {
             // (1:100) and variable % is defined,
@@ -174,7 +182,6 @@ namespace Monkeyspeak.Libraries
         private bool IsVariableEqualToNumberOrVar(TriggerReader reader)
         {
             var var = reader.ReadVariable();
-            double num = 0;
             return reader.ReadNumber() == var.Value.AsDouble();
         }
 
@@ -240,6 +247,11 @@ namespace Monkeyspeak.Libraries
             return true;
         }
 
+        /// <summary>
+        /// Prints to log.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <returns></returns>
         [TriggerDescription("Prints to the log")]
         [TriggerStringParameter]
         public virtual bool PrintToLog(TriggerReader reader)
@@ -269,6 +281,10 @@ namespace Monkeyspeak.Libraries
             if (reader.PeekVariable<double>())
             {
                 var.Value = reader.ReadVariable().Value.AsDouble(0d);
+            }
+            else if (reader.PeekVariable<string>())
+            {
+                var.Value = reader.ReadVariable().Value.AsString();
             }
             else if (reader.PeekNumber())
             {
@@ -303,6 +319,10 @@ namespace Monkeyspeak.Libraries
             return !reader.ReadVariable().IsConstant;
         }
 
+        /// <summary>
+        /// Called when page is disposing or resetting.
+        /// </summary>
+        /// <param name="page">The page.</param>
         public override void Unload(Page page)
         {
         }
