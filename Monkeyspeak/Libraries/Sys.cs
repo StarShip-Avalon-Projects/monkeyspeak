@@ -272,7 +272,7 @@ namespace Monkeyspeak.Libraries
             return true;
         }
 
-        [TriggerDescription("Sets a variable to a number or variable")]
+        [TriggerDescription("Sets a variable to a number or variable as double")]
         [TriggerVariableParameter]
         [TriggerNumberParameter]
         private bool SetVariableToNumberOrVariable(TriggerReader reader)
@@ -281,10 +281,6 @@ namespace Monkeyspeak.Libraries
             if (reader.PeekVariable<double>())
             {
                 var.Value = reader.ReadVariable().Value.AsDouble(0d);
-            }
-            else if (reader.PeekVariable<string>())
-            {
-                var.Value = reader.ReadVariable().Value.AsString();
             }
             else if (reader.PeekNumber())
             {
@@ -312,14 +308,14 @@ namespace Monkeyspeak.Libraries
             return reader.ReadVariable().IsConstant;
         }
 
-        [TriggerDescription("Determines whether the variable is not constant/unmodifiablet")]
+        [TriggerDescription("Determines whether the variable is not constant/unmodifiable")]
         [TriggerVariableParameter]
         private bool VariableIsNotConstant(TriggerReader reader)
         {
             return !reader.ReadVariable().IsConstant;
         }
 
-        /// <summary>
+        /// <summary>@
         /// Called when page is disposing or resetting.
         /// </summary>
         /// <param name="page">The page.</param>

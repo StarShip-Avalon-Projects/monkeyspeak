@@ -75,7 +75,8 @@ namespace Monkeyspeak.Editor
             }
             else
             {
-                Current.Shutdown();
+                if (Current != null)
+                    Current.Shutdown();
             }
         }
     }

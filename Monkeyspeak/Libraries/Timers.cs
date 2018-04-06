@@ -348,7 +348,6 @@ namespace Monkeyspeak.Libraries
         {
             double duration = reader.ReadNumber();
             reader.Page.CanExecute = false;
-            reader.Page.CanExecute = false;
             Thread.Sleep(TimeSpan.FromSeconds(duration > 0 ? duration : 0));
             reader.Page.CanExecute = true;
             return true;
