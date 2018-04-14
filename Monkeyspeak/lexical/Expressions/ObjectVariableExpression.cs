@@ -13,39 +13,51 @@ namespace Monkeyspeak.Lexical.Expressions
     /// been assigned yet
     /// </para>
     /// </summary>
-    public class VariableExpression : Expression<string>
+    public class ObjectVariableExpression : Expression<string>
     {
-        public VariableExpression()
+        public ObjectVariableExpression()
         {
         }
 
-        public VariableExpression(SourcePosition pos, string varRef) : base(pos, varRef)
+        public ObjectVariableExpression(SourcePosition pos, string varRef) :
+            base(pos, varRef.LeftOf('.'))
         {
+            DesiredProperty = varRef.RightOf('.');
         }
+
+        public string DesiredProperty { get; private set; }
 
         public override void Write(BinaryWriter writer)
         {
             writer.Write(GetValue<string>());
+            writer.Write(DesiredProperty);
         }
 
         public override void Read(BinaryReader reader)
         {
             SetValue(reader.ReadString());
+            DesiredProperty = reader.ReadString();
         }
 
         public override object Execute(Page page, Queue<IExpression> contents, bool addToPage = false)
         {
-            IVariable var;
+            IVariable var = null;
             var varRef = GetValue<string>();
             if (!page.HasVariable(varRef, out var))
                 if (addToPage)
-                    return page.SetVariable(new Variable(varRef));
-            return var ?? Variable.NoValue;
+                    var = page.SetVariable(new ObjectVariable(varRef));
+
+            if (var is ObjectVariable obj)
+            {
+                obj.DesiredProperty = DesiredProperty;
+                return obj;
+            }
+            return var ?? ObjectVariable.Null;
         }
 
         public override string ToString()
         {
-            return GetValue<string>();
+            return $"{GetValue<string>()}.{DesiredProperty}";
         }
     }
 }

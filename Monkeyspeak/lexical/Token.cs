@@ -19,7 +19,7 @@ namespace Monkeyspeak
         WORD, LITERAL,
 
         // custom
-        TRIGGER, VARIABLE, TABLE, REFERENCE, STRING_LITERAL, NUMBER, PREPROCESSOR
+        TRIGGER, VARIABLE, TABLE, REFERENCE, STRING_LITERAL, NUMBER, PREPROCESSOR, OBJ_VAR
     }
 
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
@@ -63,17 +63,13 @@ namespace Monkeyspeak
         /// <summary>
         /// Gets or sets the value start position within the lexer.
         /// </summary>
-        /// <value>
-        /// The value start position as located in the lexer.
-        /// </value>
+        /// <value>The value start position as located in the lexer.</value>
         public long ValueStartPosition { get => valueStart; set => valueStart = value; }
 
         /// <summary>
         /// Gets or sets the length of the value to be looked up in the lexer.
         /// </summary>
-        /// <value>
-        /// The length (see above).
-        /// </value>
+        /// <value>The length (see above).</value>
         public int Length { get => valueLength; set => valueLength = value; }
 
         public string GetValue(AbstractLexer lexer)
@@ -83,7 +79,7 @@ namespace Monkeyspeak
 
         public override string ToString()
         {
-            return $"Type: {Type} at {Position.ToString()}";
+            return $"Type: {Type} {Position}";
         }
 
         public static bool operator ==(Token a, Token b) => a.Type == b.Type && a.valueStart == b.valueStart;

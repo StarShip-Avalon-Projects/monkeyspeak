@@ -555,12 +555,7 @@ namespace Monkeyspeak
             Next();
             length++;
             char c = (char)currentChar;
-            while ((currentChar >= 'a' && currentChar <= 'z')
-                   || (currentChar >= 'A' && currentChar <= 'Z')
-                   || (char.IsDigit(c))
-                   || currentChar == '_' || currentChar == '@'
-                   || currentChar == '$' || currentChar == '#'
-                   || currentChar == '&')
+            while (IsValidChar(currentChar))
             {
                 if (!CheckEOF(currentChar)) return Token.None;
 
@@ -574,25 +569,33 @@ namespace Monkeyspeak
             {
                 Next();
                 length++;
-                while ((currentChar >= 'a' && currentChar <= 'z')
-                       || (currentChar >= 'A' && currentChar <= 'Z')
-                       || (currentChar >= '0' && currentChar <= '9')
-                       || currentChar == '_' || currentChar == '@'
-                       || currentChar == '$' || currentChar == '#'
-                       || currentChar == '&')
+                while (IsValidChar(currentChar))
                 {
                     if (!CheckEOF(currentChar)) return Token.None;
 
                     Next();
                     length++;
-                    if (currentChar == ']')
-                    {
-                        break;
-                    }
                 }
-                if (!CheckMatch(']')) return Token.None;
                 length++;
                 return new Token(TokenType.TABLE, startPos, length, sourcePos);
+            }
+
+            if (IsMatch('.'))
+            {
+                Next();
+                length++;
+                if (IsValidChar(currentChar))
+                {
+                    while (IsValidChar(currentChar))
+                    {
+                        if (!CheckEOF(currentChar)) return Token.None;
+
+                        Next();
+                        length++;
+                    }
+
+                    return new Token(TokenType.OBJ_VAR, startPos, length, sourcePos);
+                }
             }
 
             if (!CheckEOF((char)currentChar)) return Token.None;
@@ -633,6 +636,16 @@ namespace Monkeyspeak
             }
             if (currentChar != -1)
                 if (!CheckMatch('\n')) return;
+        }
+
+        private bool IsValidChar(int c)
+        {
+            return (c >= 'a' && c <= 'z')
+                           || (c >= 'A' && c <= 'Z')
+                           || (c >= '0' && c <= '9')
+                           || c == '_' || c == '@'
+                           || c == '$'
+                           || c == '&';
         }
 
         public override SourcePosition CurrentSourcePosition => new SourcePosition(lineNo, columnNo, rawPos);
