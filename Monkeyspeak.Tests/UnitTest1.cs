@@ -19,6 +19,7 @@ using System.Net.NetworkInformation;
 using System.Net;
 using Monkeyspeak.Tests;
 using Monkeyspeak.Extensions;
+using Microsoft.CSharp.RuntimeBinder;
 
 namespace MonkeyspeakTests
 
@@ -352,32 +353,32 @@ namespace MonkeyspeakTests
             }
         }
 
-        [Test]
-        public async Task ObjectVariables()
-        {
-            var engine = new MonkeyspeakEngine();
-            engine.Options.Debug = true;
-            //Logger.LogOutput = new MultiLogOutput(new FileLogger(Level.Debug), new FileLogger(), new FileLogger(Level.Info));
+        //[Test]
+        //public async Task ObjectVariables()
+        //{
+        //    var engine = new MonkeyspeakEngine();
+        //    engine.Options.Debug = true;
+        //    //Logger.LogOutput = new MultiLogOutput(new FileLogger(Level.Debug), new FileLogger(), new FileLogger(Level.Info));
 
-            Page page = engine.LoadFromString(objVarScript);
+        //    Page page = engine.LoadFromString(objVarScript);
 
-            page.LoadAllLibraries();
+        //    page.LoadAllLibraries();
 
-            var objVar = (ObjectVariable)page.SetVariable(new ObjectVariable("%objVar2"));
-            dynamic value = objVar.DynamicValue;
-            value.Test = 123d;
+        //    var objVar = (ObjectVariable)page.SetVariable(new ObjectVariable("%objVar2"));
+        //    dynamic value = objVar.DynamicValue;
+        //    value.Test = 123d;
 
-            // Trigger count created by subscribing to TriggerAdded event and putting triggers into a list.
-            Console.WriteLine("Trigger Count: " + page.Size);
-            Assert.Greater(page.Size, 0);
-            page.Error += DebugAllErrors;
+        //    // Trigger count created by subscribing to TriggerAdded event and putting triggers into a list.
+        //    Console.WriteLine("Trigger Count: " + page.Size);
+        //    Assert.Greater(page.Size, 0);
+        //    page.Error += DebugAllErrors;
 
-            page.Execute();
-            foreach (var variable in page.Scope)
-            {
-                Console.WriteLine(variable.ToString());
-            }
-        }
+        //    page.Execute();
+        //    foreach (var variable in page.Scope)
+        //    {
+        //        Console.WriteLine(variable.ToString());
+        //    }
+        //}
 
         [Test]
         public void LexerPrint()
