@@ -268,7 +268,7 @@ namespace MonkeyspeakTests
             }
         }
 
-        [Test]
+        //[Test]
         public async Task DemoTest()
         {
             var engine = new MonkeyspeakEngine();

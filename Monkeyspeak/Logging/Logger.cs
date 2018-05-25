@@ -185,24 +185,8 @@ namespace Monkeyspeak.Logging
 
         private static void Initialize()
         {
-<<<<<<< HEAD
-            cancelToken = new CancellationTokenSource(800);
-            logTask = new Task(() =>
-            {
-                while (true)
-                {
-                    Thread.Sleep(10);
-                    if (!singleThreaded)
-                    {
-                        // take a dump
-                        Dump();
-                    }
-                }
-            }, cancelToken.Token, TaskCreationOptions.LongRunning);
-=======
             cancelToken = new CancellationTokenSource();
             logTask = new Task(ProcessQueue, cancelToken.Token, TaskCreationOptions.LongRunning);
->>>>>>> 268d383a53bc0fd45021a822c36816ab6cc21e81
             if (!singleThreaded) logTask.Start();
         }
 
